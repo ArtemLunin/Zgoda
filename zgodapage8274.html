@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Підписання згоди</title>
+    <script type="text/javascript" defer>
+        const get_zgoda_url = 'https://lab.diaservis.ua/wcl_diaservice/getzgoda.php';
+
+        const showZgoda = (data) => {
+            // console.log(data);
+          //const cleanHtml = DOMPurify.sanitize(data.html);
+          const iframe = document.createElement('iframe');
+          iframe.style.width = '60%';
+          iframe.style.height = '400px';
+          document.querySelector('.content').appendChild(iframe);
+          iframe.contentWindow.document.open();
+          iframe.contentWindow.document.write(data.html);
+          iframe.contentWindow.document.close();
+          const iframeDoc = iframe.contentWindow.document || iframe.contentDocument;
+          iframeDoc.querySelector('.patiend_sign').remove();
+          //console.log(iframeDoc.querySelector('.patiend_sign'));
+          //console.log(iframeDoc.querySelector('.modified'));
+          const canvas = document.createElement('canvas');
+          canvas.id = 'canvas';
+          canvas.setAttribute('width', '450');
+          canvas.setAttribute('height', '300');
+          canvas.setAttribute('style', 'border: 1px solid black;')
+          iframeDoc.querySelector('.modified').appendChild(canvas);
+
+          const btnClear = document.createElement('button');
+          btnClear.innerText = 'Очистить';
+          //btnClear.setAttribute('onclick', 'clearCanvas()');
+          btnClear.addEventListener('click', clearCanvas);
+          
+          
+
+          const btnSave = document.createElement('button');
+          btnSave.innerText = 'Сохранить';
+          //btnSave.setAttribute('onclick', 'saveDrawing()');
+          //btnClear.addEventListener('click', saveDrawing);
+          
+
+          iframeDoc.querySelector('.buttons').appendChild(btnClear);
+          iframeDoc.querySelector('.buttons').appendChild(btnSave);
+          
+          //const canvas = document.getElementById('canvas');
+          const ctx = canvas.getContext('2d');
+          let isDrawing = false;
+
+          // Настройка кисти
+          ctx.strokeStyle = '#000000';
+          ctx.lineWidth = 2.5;
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+
+          // Обработчики событий для мыши
+          canvas.addEventListener('mousedown', startDrawing);
+          canvas.addEventListener('mousemove', draw);
+          canvas.addEventListener('mouseup', stopDrawing);
+          canvas.addEventListener('mouseout', stopDrawing);
+
+          // Поддержка сенсорных устройств
+          canvas.addEventListener('touchstart', handleTouch);
+          canvas.addEventListener('touchmove', handleTouch);
+          canvas.addEventListener('touchend', stopDrawing);
+
+          function startDrawing(e) {
+            isDrawing = true;
+            draw(e);
+          }
+
+          function stopDrawing() {
+            isDrawing = false;
+            ctx.beginPath();
+          }
+
+          function draw(e) {
+            if (!isDrawing) return;
+
+            const rect = canvas.getBoundingClientRect();
+            let x, y;
+
+            if (e.type === 'mousemove') {
+              x = e.clientX - rect.left;
+              y = e.clientY - rect.top;
+            }
+
+            ctx.lineTo(x, y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+          }
+
+          function handleTouch(e) {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const touch = e.touches[0];
+            const x = touch.clientX - rect.left;
+            const y = touch.clientY - rect.top;
+
+            if (e.type === 'touchstart') {
+              isDrawing = true;
+              ctx.beginPath();
+              ctx.moveTo(x, y);
+            } else if (e.type === 'touchmove') {
+              ctx.lineTo(x, y);
+              ctx.stroke();
+              ctx.beginPath();
+              ctx.moveTo(x, y);
+            }
+          }
+
+          function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+          }
+        };
+
+
+        //let timerId = setTimeout(function repeatQuery() {
+            //console.log('onloaded');
+         //   getZgoda().then(showZgoda);
+       //     timerId = repeatQuery(repeatQuery, 10000);
+       // }, 500);
+
+        async function getZgoda() {
+           const response = await fetch(get_zgoda_url, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                
+            });
+            if (response.ok) {
+                const data = await response.json();
+                return data;
+            }
+        }
+
+        getZgoda().then(showZgoda);
+
+    </script>
+</head>
+<body>
+    <div class="content"></div>
+</body>
+</html>
