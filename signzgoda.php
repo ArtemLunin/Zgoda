@@ -22,9 +22,9 @@ if (!file_exists($path_to_template)) {
 $zakaz = 0;
 
 $paramJSON = json_decode(file_get_contents("php://input"), TRUE);
-if (isset($paramJSON['get_zakaz']) && trim($paramJSON['get_zakaz'] != '') 
-  && (filter_var($paramJSON['get_zakaz'], FILTER_VALIDATE_INT, $options)) !== false) {
-    $zakaz = intval($paramJSON['get_zakaz']);
+if (isset($paramJSON['zakaz']) && trim($paramJSON['zakaz'] != '') 
+  && (filter_var($paramJSON['zakaz'], FILTER_VALIDATE_INT, $options)) !== false) {
+    $zakaz = intval($paramJSON['zakaz']);
 } else {
     $error_msg = [
         'msg'   => 'заказ не найден',
@@ -58,7 +58,7 @@ if ($error_status == 0) {
             $oper->id = $id_cfg;
             $oper->Read();
             $oper->zakaz = 0;
-            // $mess = $oper->Update();
+            $mess = $oper->Update();
             $mess = '';
             if ($mess !== '') {
                 $error_msg = [
@@ -86,8 +86,6 @@ if ($error_status == 0) {
                         'REPLACEZAKAZDATE', 'REPLACEDATESIGN', 'REPLACEPATIENTFIO', 'REPLACEPATIENTSIGN'
                     ], [
                         mb_convert_encoding('Заказ № '.$zakaz.' від '.$zak->zakdate, 'Windows-1251', 'UTF-8'), $zak->zakdate, $patient, $image
-                        // iconv('utf-8', 'cp1251','Заказ № '.$zakaz.' від '.$zak->zakdate), $zak->zakdate, $patient
-                        // 'Заказ № '.$zakaz.' від '
                     ], $file_template);
                     $temp_file = tempnam(sys_get_temp_dir(), 'zgoda_out');
                     $mpdf = new mPDF();
@@ -98,7 +96,14 @@ if ($error_status == 0) {
                     $zgoda_obj->conn = $conn;
                     $zgoda_obj->zakaz = $zakaz;
                     $zgoda_obj->doc = base64_encode(gzcompress($ss, 9));
-                    $mess = $zgoda_obj->Add();
+                    $sql_str = "SELECT MAX(ID) FROM ZGODADOC WHERE ZAKAZ=" . $zakaz;
+                    $id_doc = GetFieldFromSql($conn, $sql_str, 0);
+                    if ($id_doc !== 0) {
+                        $zgoda_obj->id = $id_doc;
+                        $mess = $zgoda_obj->Update();
+                    } else {
+                        $mess = $zgoda_obj->Add();
+                    }
                     if ($mess !== '') {
                         $error_msg = [
                             'msg'   => $mess,

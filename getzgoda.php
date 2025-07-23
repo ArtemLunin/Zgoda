@@ -60,7 +60,7 @@ if (!file_exists($path_to_template)) {
     ];
     $error_status = 404; 
 }
-$paramJSON = json_decode(file_get_contents("php://input"), TRUE);
+// $paramJSON = json_decode(file_get_contents("php://input"), TRUE);
 // if (!isset($paramJSON['get_zakaz'])) {
 //     $error_msg = [
 //         'msg'   => 'неизвестный запрос',
@@ -68,10 +68,6 @@ $paramJSON = json_decode(file_get_contents("php://input"), TRUE);
 //     $error_status = 400;
 // }
 if ($error_status == 0) {
-    //&& trim($paramJSON['zakaz'] != '') 
-//  && (filter_var($paramJSON['zakaz'], FILTER_VALIDATE_INT, $options)) !== false) {
-    // $zakaz = intval($paramJSON['zakaz']);
-
     $ip_notepad = '';
     if (isset($_SERVER['REMOTE_ADDR']) && ($ip_notepad = filter_var($_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP)) !== false) {
 
@@ -104,7 +100,8 @@ if ($error_status == 0) {
                     $error_msg = [
                         'msg'   => 'заказ найден',
                         'html'  => iconv('cp1251','utf-8', $file_out),
-                        'zakaz' => $zak->zakkode
+                        // 'zakaz' => $zak->zakkode,
+                        'zakaz' => (int)$zak->zakaz
                         // 'patient'   => iconv('cp1251','utf-8',$patient),
                         // 'date'      => $zak->zakdate,
                         // 'head_zgoda'=> 'Заказ № '.$zak->zakkode.' від '.$zak->zakdate
